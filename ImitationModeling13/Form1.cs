@@ -16,40 +16,7 @@ namespace ImitationModeling9
         public Form1()
         {
             InitializeComponent();
-        }
-
-        private void changeTextBox()
-        {
-            double left = 1.0;
-            for (int i =0; i < 4; ++i)
-            {
-                Control textBox = this.Controls.Find("prob" + (i+1).ToString()+"TextBox", true)[0];
-                double prob;
-                if (Double.TryParse(textBox.Text, out prob))                
-                    left -= prob;
-            }
-            prob5TextBox.Text = Convert.ToString(left);
-        }
-
-        private void prob1TextBox_TextChanged(object sender, EventArgs e)
-        {
-            changeTextBox();
-        }
-
-        private void prob2TextBox_TextChanged(object sender, EventArgs e)
-        {
-            changeTextBox();
-        }
-
-        private void prob3TextBox_TextChanged(object sender, EventArgs e)
-        {
-            changeTextBox();
-        }
-
-        private void prob4TextBox_TextChanged(object sender, EventArgs e)
-        {
-            changeTextBox();
-        }
+        } 
         private int SimulateExperiment(double[] probs)
         {
             int k = 0;
@@ -60,11 +27,9 @@ namespace ImitationModeling9
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            double prob5;
-            if (!Double.TryParse(prob5TextBox.Text, out prob5))
-                return;
-            if (prob5 < 0)
-                return;
+            double lambda;
+            if (!Double.TryParse(lambdaTextBox.Text, out lambda))
+                return;            
             chart1.Series[0].Points.Clear();
             double[] probs = new double[5];
             for (int i = 1; i <= 5; ++i)
