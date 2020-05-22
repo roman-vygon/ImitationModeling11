@@ -25,47 +25,76 @@ namespace ImitationModeling9
                 A -= probs[k++];
             return k - 1;
         }
+        private int generatePoisson(double lambda)
+        {
+            
+            int m = 0;
+            double S = 0;
+            while (true)
+            {
+                double alpha = r.NextDouble();
+                S += Math.Log(alpha);
+                if (S < -lambda)
+                    break;
+                else
+                    ++m;
+            }
+            return m;
+
+        }
+        private int factorial(int n)
+        {
+            int res = 1;
+            if (n == 0)
+                return 1;
+            while (n != 1)
+            {
+                res = res * n;
+                n = n - 1;
+            }
+            return res;
+        }
+        private double poissonProb(double lambda, int k)
+        {
+            return (Math.Pow(lambda, k) / factorial(k)) * Math.Exp(-lambda);
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             double lambda;
             if (!Double.TryParse(lambdaTextBox.Text, out lambda))
                 return;            
             chart1.Series[0].Points.Clear();
-            double[] probs = new double[5];
-            for (int i = 1; i <= 5; ++i)
-            {
-                Control textBox = this.Controls.Find("prob" + i.ToString() + "TextBox", true)[0];
-                double textProb;
-                if (Double.TryParse(textBox.Text, out textProb))
-                    probs[i - 1] = textProb;
-            }
+            
 
-            double E = 0;
-            for (int i = 0; i < 5; ++i)
-                E += probs[i] * (i + 1);
-            double D = 0;
-            for (int i = 0; i < 5; ++i)
-                D += (i + 1) * (i + 1) * probs[i];
-            D -= E * E;
+            double E = lambda;            
+            double D = lambda;
 
-            int[] stat = new int[5];
+            int maxRange = Convert.ToInt32(2.3 * lambda);
+            int[] stat = new int[maxRange];
             int numExperiments = Convert.ToInt32(numTextBox.Text);
             double Ex = 0;
             double Dx = 0;
-            for (int i =0; i <numExperiments; ++i)
+            List<int> results = new List<int>();
+            for (int i = 0; i < numExperiments; ++i)
             {
-                stat[SimulateExperiment(probs)]++;
+                int result = generatePoisson(lambda);
+                Ex += result;
+                results.Add(result);
+                if (result >= maxRange)
+                    result = maxRange-1;
+                stat[result]++;                
             }
-
-            
-            for (int i = 0; i < 5; ++i)
-            {
-                double prob = stat[i] * 1.0 / numExperiments;
-                Ex += prob * (i + 1);
-                Dx += prob * (i + 1) * (i + 1);
+            Ex /= numExperiments;            
+            for (int i = 0; i < numExperiments;++i)
+                Dx += (results[i] - Ex) * (results[i] - Ex);
+            for (int i = 0; i < maxRange; ++i)
+            {                
+                double prob = stat[i] * 1.0 / numExperiments;                
                 chart1.Series[0].Points.Add(prob);
+               
             }
-            Dx -= Ex * Ex;
+            Dx /= numExperiments;
+            
 
             double Er = Math.Abs(E - Ex) / E;
             double Dr = Math.Abs(D - Dx) / D;
@@ -75,12 +104,12 @@ namespace ImitationModeling9
                          Dx, Convert.ToInt32(Dr * 100));
 
             double chi = 0;
-            for (int i =0; i < 5; ++i)
+            for (int i =0; i < maxRange; ++i)
             {
-                chi += (stat[i] * stat[i]) / (probs[i] * numExperiments);
+                chi += (stat[i] * stat[i] * 1.0) / (poissonProb(lambda, i) * numExperiments);
             }
             chi -= numExperiments;
-            chiLabel.Text = String.Format("{0} > 11.07 is {2}",
+            chiLabel.Text = String.Format("{0} > 11.07 is {1}",
                          chi, (chi > 11.07) ? "true" : "false");            
         }
     }
